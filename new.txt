@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 s is a new text file, bitch. 
 
 
 However, no. mofucka
+=======
+this is a new text file. 
+>>>>>>> dev
