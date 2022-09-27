@@ -35,7 +35,7 @@ void process_request(char *file_name, char *column_name, char *unique_value){
         perror("Unable to allocate buffer");
         exit(1);
     }
-f
+
     input_file = fopen(file_name, "r");
     if (NULL == input_file) {
         printf("file can't be opened \n");
