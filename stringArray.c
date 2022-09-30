@@ -101,7 +101,7 @@
             return;
         }
 
-        printf("\n\n[");
+        printf("[");
         for (int i = 0; i < s.numStrings; i++) {
             printf("%s",s.headString[i]);
             if (i < s.numStrings-1) printf(", ");
