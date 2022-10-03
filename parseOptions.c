@@ -21,7 +21,7 @@
 
 //primary methods
     stringArray getFilenames();
-    stringArray getSortKeys();
+    stringArray getSortKeys(char* filename);
 //helper methods
     //given a string of things you want to separate, returns the next token separated by delimiters
     char* consumeNextToken(char** buffer,char delim); //given a string, split into two parts.
@@ -52,7 +52,7 @@ stringArray getFilenames() {
 
 }
 
-stringArray getSortKeys(char* fileName) {//gets the sort keys associated with a filename
+stringArray getSortKeys(char* filename) {//gets the sort keys associated with a filename
     FILE *fp; 
     fp = fopen(file_options,"r");
     char* buffer = malloc(sizeof(char) * BUFFER_SIZE);
@@ -65,7 +65,7 @@ stringArray getSortKeys(char* fileName) {//gets the sort keys associated with a 
         while (hasMoreTokens(buffer)) {//while there are remaining tokens in the line
             strcpy(token,consumeNextToken(&buffer,DELIM));//get the next token, makes buffer NULL if empty.
             trimEOL(&token);
-            if( strcmp(token,fileName) == 0) { //see if its the filename we want
+            if( strcmp(token,filename) == 0) { //see if its the filename we want
                 foundIndex = column;//record index
                 break;//now we know the column
             }
