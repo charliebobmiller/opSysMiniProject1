@@ -32,6 +32,12 @@
 
 
 //structs:
+typedef struct {//MAIL
+    char* text;
+    int destPID;
+    int senderPID;
+
+} mail; //a vessel that messages can be passed in
 
 typedef struct {//MAILBOX
     int mailboxNumber; //should match the index in post_office
@@ -46,12 +52,6 @@ typedef struct {//MAILBOX
 
 } mailbox; //a place where mail lives
 
-typedef struct {//MAIL
-    char* text;
-    int destPID;
-    int senderPID;
-
-} mail; //a vessel that messages can be passed in
 
 
 
@@ -72,9 +72,17 @@ mailbox mailbox_create(int pid);
 int mailbox_numInQueue(mailbox mb);
 int mailbox_isFull(mailbox mb);
 int mailbox_isEmpty(mailbox mb);
+int mailbox_hasRoom(mailbox mb);
 int hasMailbox(int pid);
 void mailbox_destroy(mailbox mb);
 mailbox getMailbox(int PID);
+int mailbox_PIDis(mailbox mb, int pid);
+mail mail_createEmpty();
+
+void mailbox_setNext(mailbox mb) ;//update head and next pointers
+void mailbox_setFront(mailbox mb) ;//updates the front pointer
+
+
 
 
 //this is a struct that we'll place in static memory so multiple processes can access it
@@ -202,8 +210,9 @@ mail mailbox_dequeue(mailbox mb) { //takes mail off the queue
 }   
 
 int queue_indexIsOccupied(mailbox mb, int indx) {
-    if (  (mb.queue + indx)->mailboxNumber == -1) return 1;
-    else return 0;
+    if (  (mb.queue + indx )->destPID == -1) return 0;
+    else return 1;
+
 }
 
 mail mail_createEmpty() {
@@ -224,7 +233,8 @@ void mailbox_removeMail(mailbox mb, int indx) {
 }
 
 
-void mailbox_setNext(mailbox mb) {//update head and next pointers
+void mailbox_setNext
+(mailbox mb) {//update head and next pointers
     //starting at rear, look for the next open spot
     int i = mb.rearIndex; 
     int n;
@@ -237,6 +247,7 @@ void mailbox_setNext(mailbox mb) {//update head and next pointers
     }      
     
 }
+
 
 void mailbox_setFront(mailbox mb) {//updates the front pointer
     if ( queue_indexIsOccupied(mb,mb.frontIndex) == 1)
@@ -281,11 +292,13 @@ int mailbox_numInQueue(mailbox mb) {
 
 void mailbox_destroy(mailbox mb) {
     //get rid of the space for each parcel
-    for (int i = 0; i < mb.queueSize; i++) {
-        free(  *(mb.queue + i) );
-    }
+    // for (int i = 0; i < mb.queueSize; i++) {
+    //     free(  *(mb.queue + i)->text ); 
+    // }
 
     //kill anything else
+
+    //no mallocs were used in the creation of a mailbox. do i need to free memory now?
 }
 
 
@@ -298,13 +311,15 @@ int hasMailbox(int pid) { //check to see if a process has a mailbox associated w
 mailbox getMailbox(int pid) {
     //find the mailbox associated with PID
     for (int i = 0; i < local.numMailboxes; i++) {
-        if ( mailbox_PIDis(pid) ) 
-            return (*(local.mailboxes) + i); //return 
+        if ( (local.mailboxes + i)->address_pid == pid)
+            return *(local.mailboxes + i);
+    
     }
     mailbox nullbox;
     nullbox.mailboxNumber = -1;
     return nullbox; //mailbox doesnt exist
 }
+
 
 int main() { //test this shit out :)
     int process1 = 14; //this is a fake pid because i'm not testing on processes yet
