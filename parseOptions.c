@@ -191,18 +191,18 @@ void shiftstring(char** str, int shiftamt) {
     *(*str + i) = '\0';
 } 
 
-int main() {
-    printf("\ntesting parseOptions.txt parser...\n");
-    printf("getting filenames from options.txt...\n");
-    stringArray filenames = getFilenames();
-    printf("filenames:");
-    strArr_print(filenames);
+// int main() {
+//     printf("\ntesting parseOptions.txt parser...\n");
+//     printf("getting filenames from options.txt...\n");
+//     stringArray filenames = getFilenames();
+//     printf("filenames:");
+//     strArr_print(filenames);
     
-    for(int i = 0; i < filenames.numStrings; i++) {
-        printf("\ngetting sortkeys from filename..%s\n",filenames.headString[i]);
-        stringArray sortkeys = getSortKeys(filenames.headString[i]);
-        strArr_print(sortkeys);
-    }
+//     for(int i = 0; i < filenames.numStrings; i++) {
+//         printf("\ngetting sortkeys from filename..%s\n",filenames.headString[i]);
+//         stringArray sortkeys = getSortKeys(filenames.headString[i]);
+//         strArr_print(sortkeys);
+//     }
     
 
-}
+// }
