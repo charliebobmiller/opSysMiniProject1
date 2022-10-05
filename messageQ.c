@@ -36,8 +36,8 @@ int mailbox_mailExistsAt(mailbox mb,int index);
 
 //this will end up mmap'd. doing a structure here so its easy to plop in mmem. implement mmap with like,
 //an int - then a structure, then i'll know i can use structure in mmap
-static post_office local = {0 , MAILBOX_LIMIT_INITIAL, NULL};
-
+static post_office* local;
+#define MAILBOX_POSTOFFICE "/usps"
 
 
 
@@ -45,9 +45,15 @@ static post_office local = {0 , MAILBOX_LIMIT_INITIAL, NULL};
 ///////////////////////////
 /////////////driver main
 int main() {
-    int process1 = 14; //this is a fake pid because i'm not testing on processes yet
+
+    
+
+
+    int process1 = getpid(); //this is a fake pid because i'm not testing on processes yet
     char* buf = malloc(sizeof(char) * 255);
     int stat;
+
+	printf("pid?%d\n",process1);
 
     //send message to process1
     for(int i = 1; i < 20; i++) {
@@ -65,7 +71,7 @@ int main() {
     //recieve messages from process1 mailbox
     char* msg = msgQ_receive(process1);
     if (msg == NULL)
-        printf("couldnt receive.\n",msg);
+        printf("couldnt receive.\n");
     else 
         printf("first recieved: [%s]\n",msg);
     while( mailbox_hasMail(mailbox_find(process1)) == 1) {
@@ -95,6 +101,12 @@ int main() {
 
 //send a message to a mailbox (mailbox belongs to PID)
 int msgQ_send(int pid,char* message) {
+    
+    //check that our post office is established. if not, create it.
+    if (mailbox_memExists(local) == 0 )
+	mailbox_memCreate();//populate
+
+
     mailbox* mb;
     //see if there is a mailbox ready to send to.
     if (mailbox_hasMailbox(pid) == 0) {
