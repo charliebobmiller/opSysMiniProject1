@@ -22,6 +22,7 @@
 //primary methods
     stringArray getFilenames();
     stringArray getSortKeys(char* filename);
+    stringArray getUniqueKeys(char* filename, char* sortKey);
 //helper methods
     //given a string of things you want to separate, returns the next token separated by delimiters
     char* consumeNextToken(char** buffer,char delim); //given a string, split into two parts.
@@ -101,6 +102,7 @@ int hasMoreTokens(char* buf) {
 
 char* consumeNextToken(char** str,char delim) { //strip and return the next delimited string from buffer, 
     char* ret;
+    char phraseDelim = '"';
 
     if (str == NULL) printf("raw string was NULL pointer.\n"); 
     
@@ -108,11 +110,24 @@ char* consumeNextToken(char** str,char delim) { //strip and return the next deli
         int delimIndex;
         int tokenStart = -1;
         int len = strlen(*str);
-        for (int i = 0; i < len; i++) 
-            if (*(*str + i) != delim) {//token beginning found
+        for (int i = 0; i < len; i++) {
+            if (  (*(*str + i) != delim) ) {//token beginning found
                 tokenStart = i;
                 break;
             }
+        }
+
+        if (tokenStart != -1) 
+            if ((*(*str + tokenStart) == phraseDelim)) { //if we found the beginning of a phrase
+                for (int i = tokenStart + 1; i < len; i++) {//then consume characters until we find end of phrase 
+                    if (  (*(*str + i) == phraseDelim) ) {//end of phrase found
+                        tokenStart = i;
+                        break;
+                    }
+                }
+            }
+
+        
 
         //if no character is found, there are no tokens
         if (tokenStart == -1) {
@@ -191,18 +206,73 @@ void shiftstring(char** str, int shiftamt) {
     *(*str + i) = '\0';
 } 
 
-// int main() {
-//     printf("\ntesting parseOptions.txt parser...\n");
-//     printf("getting filenames from options.txt...\n");
-//     stringArray filenames = getFilenames();
-//     printf("filenames:");
-//     strArr_print(filenames);
+
+stringArray getUniqueKeys(char* filename, char* sortKey) {
+    stringArray sarr = strArr();
+    FILE *fp; 
+    char* buffer = malloc(sizeof(char) * BUFFER_SIZE);
+    sprintf(buffer,"%s%s","data/",filename);
+    char* token = malloc(sizeof(char) * BUFFER_SIZE);
     
-//     for(int i = 0; i < filenames.numStrings; i++) {
-//         printf("\ngetting sortkeys from filename..%s\n",filenames.headString[i]);
-//         stringArray sortkeys = getSortKeys(filenames.headString[i]);
-//         strArr_print(sortkeys);
-//     }
+    
+    //first, open the filename in data. 
+    fp = fopen(buffer,"r");
+
+    int foundIndex = -1;
+    int column = 0;
+    //get the column# of our sortkey
+    if (fgets(buffer,BUFFER_SIZE,fp) != NULL) {//if we can read a line (file has top row)
+        while (hasMoreTokens(buffer)) {//while there are remaining tokens in the line
+            strcpy(token,consumeNextToken(&buffer,DELIM));//get the next token, makes buffer NULL if empty.
+            trimEOL(&token);
+            if( strcmp(token,sortKey) == 0) { //see if its the sortkey we're looking for
+                foundIndex = column;//record index
+                break;//now we know the column
+            }
+            column++; //indicate next column
+        }
+        if (foundIndex == -1) printf("could not find sortkey in file. :(\n");
+    } 
+    else {printf("ERROR: failed reading options.txt (FATAL)\n");exit(0);}
+
+    //pass through the whole file looking for unique sortkeys
+    while (fgets(buffer,BUFFER_SIZE,fp)) { //skips the first line to look at data
+
+        //discard all the stuff before column we want
+        for ( int i = 0; i < column; i++) 
+            consumeNextToken(&buffer,DELIM);
+        
+        //determine if it is a unique token
+        strcpy(token,consumeNextToken(&buffer,DELIM));//we assume file has same # columns throughout.
+        trimEOL(&token);
+
+        if ( strArr_find(sarr,token) == -1 ) //look for another instance in present values of sort
+            strArr_append(&sarr,token );//this token is a unique sortkey. add it to the list.
+    }
+
+    //the entire file has been searched for unique keys. return the stringArray we made. 
+
+    return sarr;
+}
+
+int parseOptions_test() {
+    printf("\ntesting parseOptions.txt parser...\n");
+    printf("getting filenames from options.txt...\n");
+    stringArray filenames = getFilenames();
+    printf("filenames:");
+    strArr_print(filenames);
+    
+    stringArray sortkeys;
+    for(int i = 0; i < filenames.numStrings; i++) {
+        printf("\ngetting sortkeys from filename..%s\n",filenames.headString[i]);
+        sortkeys = getSortKeys(filenames.headString[i]);
+        strArr_print(sortkeys);
+    }
+
+    printf("getting an array of unique sortkeys from file #1\n");
+
+    stringArray uks = getUniqueKeys(filenames.headString[1],sortkeys.headString[1]);
+    strArr_print(uks);
     
 
-// }
+}

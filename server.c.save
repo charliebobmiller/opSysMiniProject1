@@ -18,7 +18,7 @@
 char* menu_askClient_forFilename(int sock);
 char* menu_askClient_forSortkey(int sock,char* choice_filename);
 void doDisconnect(int sock);
-void spawnUniqueKeyProcess(char* uniqueKey);
+
 
 //main function
 int main(){
@@ -100,16 +100,21 @@ int main(){
 
 				stringArray uniqueKeys = getUniqueKeys(choice_filename,choice_sortkey);
 				//now we want to fork a process for each unique key
-				int pids[uniqueKeys.numStrings];
+				int* pids[uniqueKeys.numStrings];
 				for(int i = 0; i < uniqueKeys.numStrings; i++) {//for every sort key
 					pids[i] = fork();
-				//for every unique key, spawn a  
 					if (pids[i] == 0) spawnUniqueKeyProcess(uniqueKeys.headString[i]);
 					printf("FIXME>> make new process for unique key:%d= [%s]\n",i,uniqueKeys.headString[i]);
 				}
 
-				
-				printf("starting over\n");
+				//parent process
+
+				//now we give client options for what to do with the data
+				int choice_menuOptions = menu_askClient_forMenuOption(New_sock) //returns 1,2,3, or 4.
+
+
+				//if 1, 
+				printf("not starting over\n");
 				exit(0);
 
 
@@ -195,11 +200,9 @@ char* menu_askClient_forSortkey(int sock,char* choice_filename) {
 }
 
 
-void spawnUniqueKeyProcess(char* uniqueKey) {
+void spawnUniqueKeyProcess(uniqueKeys.headString[i]) {
 	
-	printf("exiting pid: %d\n",getpid());
 	//julius' process goes here hopefully
-	exit(0);
 
 }
 

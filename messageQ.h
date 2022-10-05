@@ -11,20 +11,16 @@
 #ifndef stringArray
 #include "stringArray.c"
         #endif
-        //windows doesnt know what this is
-// #ifndef unistd
-// #include <unistd.h>
-//         #endif
+    //windows doesnt know what this is
+ #ifndef unistd
+ #include <unistd.h>
+         #endif
+#ifndef  mman
+#include <sys/mman.h>
+	#endif
 #define MSG_SIZE_LIMIT 512 //the maximum length of a text string in a mail parcel
 #define MSG_QUEUE_SIZE 10 //the number of mail parcels a mailbox can have 
 #define MAILBOX_LIMIT_INITIAL 20
-
-
-
-//REMOVE ON UNIX
-int getpid() {
-    return 14;
-}
 
 //structs:
 typedef struct {//MAIL

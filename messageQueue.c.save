@@ -1,0 +1,65 @@
+//message queue IPC
+#ifndef stdio
+#include <stdio.h>
+	#endif
+#ifndef string
+#include <string.h>
+	#endif
+#ifndef unistd
+#include <unistd.h>
+	#endif
+
+typedef struct {
+
+
+} mailbox
+
+
+int main() {
+	
+	printf("first line, not forked.\n");
+	void* mb = createMailbox("test mailbox");	
+	int f = fork();
+
+	if(f>0) { //parent
+		printf("parent processid: %d, parent?:%d\n\ndoing parent stuff...->\n",getpid(),getppid());
+		parentstuff();
+	}
+	else if (f == 0){//child{ 
+		printf("child id: %d, parent:%d\n\ndoing child stuff...->\n",getpid(),getppid());
+		childstuff();
+	}
+	else printf("unable to create proces\n");
+
+}
+
+
+
+void parentstuff() {
+	//send message through queue and wait for it to be received
+	char* messages[] = {"qwer","asdf","zxcv","xlkjsafhiahe"};
+	int numMsg = 4;
+	
+	for (int i = 0; i < numMsg; i++) {
+		sendToMsgQ(messages[i],mb);
+	}
+}
+
+
+void childstuff() {
+
+}
+
+
+
+void receiveLineMessageQ(char** buf,int mailboxNum) {
+
+}
+
+void* createMailbox(char* description) {
+
+}
+
+void destroyMailbox(void* mb) {
+
+}

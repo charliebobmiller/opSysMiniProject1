@@ -36,24 +36,19 @@ int mailbox_mailExistsAt(mailbox mb,int index);
 
 //this will end up mmap'd. doing a structure here so its easy to plop in mmem. implement mmap with like,
 //an int - then a structure, then i'll know i can use structure in mmap
-static post_office* local;
-#define MAILBOX_POSTOFFICE "/usps"
-
+static post_office* local = NULL;
+//used to be: //static post_office local = {0 , MAILBOX_LIMIT_INITIAL, NULL};
+//but
+#define PO_FILE "/Post_office_sharedMem"
 
 
 
 ///////////////////////////
 /////////////driver main
 int main() {
-
-    
-
-
-    int process1 = getpid(); //this is a fake pid because i'm not testing on processes yet
+    int process1 = 14; //this is a fake pid because i'm not testing on processes yet
     char* buf = malloc(sizeof(char) * 255);
     int stat;
-
-	printf("pid?%d\n",process1);
 
     //send message to process1
     for(int i = 1; i < 20; i++) {
@@ -71,7 +66,7 @@ int main() {
     //recieve messages from process1 mailbox
     char* msg = msgQ_receive(process1);
     if (msg == NULL)
-        printf("couldnt receive.\n");
+        printf("couldnt receive.\n",msg);
     else 
         printf("first recieved: [%s]\n",msg);
     while( mailbox_hasMail(mailbox_find(process1)) == 1) {
@@ -101,10 +96,9 @@ int main() {
 
 //send a message to a mailbox (mailbox belongs to PID)
 int msgQ_send(int pid,char* message) {
-    
-    //check that our post office is established. if not, create it.
-    if (mailbox_memExists(local) == 0 )
-	mailbox_memCreate();//populate
+    if (mailbox_shmemExists() == 0) { //then we need to establish it. 
+	mailbox_shmemCreate();
+    }
 
 
     mailbox* mb;
@@ -133,6 +127,10 @@ int msgQ_send(int pid,char* message) {
 
 //receive a message from a mailbox 
 char* msgQ_receive(int pid) {//returns message if one exists, NULL otherwise.
+    if (mailbox_shmemExists() == 0) { //then we need to establish it. 
+	mailbox_shmemCreate();
+    }
+
     mailbox* mb;
     
     //check to see if mailbox exists 
@@ -267,8 +265,8 @@ char* mailbox_dequeue(mailbox* mb) {
 
 
 mailbox* mailbox_find(int pid) {
-    for (int i = 0; i < local.numMailboxes; i++) {
-        if (local.mailboxes[i].address_pid == pid) return (local.mailboxes + i);
+    for (int i = 0; i < local->numMailboxes; i++) {
+        if (local->mailboxes[i].address_pid == pid) return (local->mailboxes + i);
     }
 
     return NULL;
@@ -279,7 +277,19 @@ mailbox* mailbox_find(int pid) {
 
 
 
+int  mailbox_shmemExists() {
+	return (local != NULL);
+}
 
+
+void mailbox_shmemCreate() {
+	//do shm_open
+	int fileDesc = shm_open(PO_FILE, O_RDWR | O_CREAT | O_TRUNC, 00666);
+	//do mmap to local
+	local = (post_office*) mmap(NULL, sizeof(post_office*), PROT_READ|PROT_WRITE, MAP_SHARED, fileDesc, 0);
+	//i am hoping that 
+	
+}
 
 
 
@@ -291,16 +301,16 @@ mailbox* mailbox_find(int pid) {
 mailbox* mailbox_new(int pid) {
 
     //do post office stuff
-    if (post_office_hasSpace(local) == 0) 
-        post_office_expand(local);
-    if (local.mailboxes == NULL) 
-        local.mailboxes = malloc(sizeof(mailbox) * local.maximum_mailboxes);
+    if (post_office_hasSpace(*local) == 0) 
+        post_office_expand(*local);
+    if (local->mailboxes == NULL) 
+        local->mailboxes = malloc(sizeof(mailbox) * local->maximum_mailboxes);
     
     //work with the current mailbox
-    mailbox* newbox = (local.mailboxes + local.numMailboxes);
+    mailbox* newbox = (local->mailboxes + local->numMailboxes);
     //update count
-    newbox->mailboxNumber = local.numMailboxes;
-    local.numMailboxes++;
+    newbox->mailboxNumber = local->numMailboxes;
+    local->numMailboxes++;
     
     //update mailbox list
     newbox->address_pid = pid;
@@ -387,8 +397,8 @@ int mailbox_exists(mailbox mb) {return mailbox_hasMailbox(mb.address_pid);}
 int mailbox_hasMailbox(int pid) {
 
     //loop through every mailbox in the post office
-    for (int i = 0; i < local.numMailboxes; i++) {
-        if (  (local.mailboxes + i)->address_pid == pid  ) //we found a mailbox with the pid
+    for (int i = 0; i < local->numMailboxes; i++) {
+        if (  (local->mailboxes + i)->address_pid == pid  ) //we found a mailbox with the pid
             return 1;//it does have a mailbox.
 
     }
